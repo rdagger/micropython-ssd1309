@@ -67,7 +67,7 @@ class Display(object):
             dc (Class Pin):  Data/Command pin
             rst (Class Pin):  Reset pin
             width (Optional int): Screen width (default 128)
-            height (Optional int): Screen height (default 296)
+            height (Optional int): Screen height (default 64)
         """
         self.spi = spi
         self.cs = cs
