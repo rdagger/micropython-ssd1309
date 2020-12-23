@@ -521,6 +521,19 @@ class Display(object):
                 print("Invalid rotation.")
                 return
 
+    def draw_text8x8(self, x, y, text):
+        """Draw text using built-in MicroPython 8x8 bit font.
+
+        Args:
+            x (int): Starting X position.
+            y (int): Starting Y position.
+            text (string): Text to draw.
+        """
+        # Confirm coordinates in boundary
+        if self.is_off_grid(x, y, x + 8, y + 8):
+            return
+        self.monoFB.text(text, x, y)
+
     def draw_vline(self, x, y, h, invert=False):
         """Draw a vertical line.
 
