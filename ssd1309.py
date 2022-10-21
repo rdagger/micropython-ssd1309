@@ -132,6 +132,14 @@ class Display(object):
         """Clear buffer.
         """
         self.monoFB.fill(0x00)
+        
+        
+    def contrast(self, contrast):
+        """Set contrast level 0 to 255
+        """
+        self.write_cmd(CONTRAST_CONTROL)
+        self.write_cmd(contrast)
+        
 
     def draw_bitmap(self, path, x, y, w, h, invert=False, rotate=0):
         """Load MONO_HMSB bitmap from disc and draw to screen.
