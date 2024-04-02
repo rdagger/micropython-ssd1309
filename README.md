@@ -1,4 +1,4 @@
-# MicroPython Display Driver for SSD1309 monochrome OLED
+# MicroPython SPI & I2C Display Driver for SSD1309 monochrome OLED
 The library supports drawing lines, shapes, text, sprites and images.  All code is documented and there are demo examples.
 
 Sample XGLCD fonts are included in the fonts folder.  Additional fonts can generated from TTF fonts using a free utility called MikroElektronika [GLCD Font Creator](https://www.mikroe.com/glcd-font-creator).
