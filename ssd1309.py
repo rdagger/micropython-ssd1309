@@ -6,7 +6,7 @@ from utime import sleep_ms  # type: ignore
 
 
 class Display(object):
-    """Serial interface for 2.9 inch E-paper display.
+    """Serial and I2C interface for SD1309 monochrome OLED display.
 
     Note:  All coordinates are zero based.
     """
