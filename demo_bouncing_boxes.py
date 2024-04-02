@@ -1,8 +1,8 @@
 """SSD1309 demo (bouncing boxes)."""
-from machine import Pin, SPI
+from machine import Pin, SPI  # type: ignore
 from random import random, seed
 from ssd1309 import Display
-from utime import sleep_us, ticks_cpu, ticks_us, ticks_diff
+from utime import sleep_us, ticks_cpu, ticks_us, ticks_diff  # type: ignore
 
 
 class Box(object):
@@ -79,9 +79,10 @@ def test():
     try:
         # Baud rate of 14500000 seems about the max
         spi = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))
-        display = Display(spi, dc=Pin(4), cs=Pin(5), rst=Pin(2))
+        display = Display(spi, dc=Pin(4), cs=Pin(13), rst=Pin(2))
+        # i2c = I2C(0, freq=400000, scl=Pin(5), sda=Pin(4))  # Pico I2C bus 1
+        # display = Display(i2c=i2c, rst=Pin(2))
         display.clear()
-
 
         sizes = [12, 11, 10, 9, 8, 7]
         boxes = [Box(128, 64, sizes[i], display) for i in range(6)]

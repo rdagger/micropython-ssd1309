@@ -1,12 +1,12 @@
 """MicroPython SSD1309 OLED monochrom display driver."""
 from math import cos, sin, pi, radians
-from micropython import const
-from framebuf import FrameBuffer, GS8, MONO_HLSB, MONO_HMSB, MONO_VLSB
-from utime import sleep_ms
+from micropython import const  # type: ignore
+from framebuf import FrameBuffer, GS8, MONO_HMSB, MONO_VLSB  # type: ignore
+from utime import sleep_ms  # type: ignore
 
 
 class Display(object):
-    """Serial interface for monochrome OLED display.
+    """Serial interface for 2.9 inch E-paper display.
 
     Note:  All coordinates are zero based.
     """
@@ -39,10 +39,10 @@ class Display(object):
     HIGH_CSA_IN_PAM = const(0x10)
     MEMORY_ADDRESSING_MODE = const(0x20)
     COLUMN_ADDRESS = const(0x21)
-    PAGE_ADDRESS  = const(0x22)
+    PAGE_ADDRESS = const(0x22)
     PSA_IN_PAM = const(0xB0)
     DISPLAY_START_LINE = const(0x40)
-    SEGMENT_MAP_REMAP  = const(0xA0)
+    SEGMENT_MAP_REMAP = const(0xA0)
     SEGMENT_MAP_FLIPPED = const(0xA1)
     MUX_RATIO = const(0xA8)
     COM_OUTPUT_NORMAL = const(0xC0)
@@ -55,24 +55,39 @@ class Display(object):
     DISPLAY_CLOCK_DIV = const(0xd5)
     PRECHARGE_PERIOD = const(0xd9)
     VCOM_DESELECT_LEVEL = const(0xdb)
-    
 
-
-    def __init__(self, spi, cs, dc, rst, width=128, height=64):
+    def __init__(self, spi=None, cs=None, dc=None, rst=None,
+                 i2c=None, address=0x3C, width=128, height=64):
         """Constructor for Display.
 
         Args:
-            spi (Class Spi):  SPI interface for display
-            cs (Class Pin):  Chip select pin
-            dc (Class Pin):  Data/Command pin
-            rst (Class Pin):  Reset pin
+            spi (Optional Class Spi):  SPI interface for display
+            cs (Optional Class Pin):  Chip select pin
+            dc (Optional Class Pin):  Data/Command pin
+            rst (Optional Class Pin):  Reset pin
+            i2c (Optional Class I2C):  I2C interface for display
+            address (Optional int): I2C address
             width (Optional int): Screen width (default 128)
             height (Optional int): Screen height (default 64)
         """
-        self.spi = spi
-        self.cs = cs
-        self.dc = dc
-        self.rst = rst
+        if rst is not None:
+            self.rst = rst
+            self.rst.init(self.rst.OUT, value=1)
+        if spi is not None:
+            self.spi = spi
+            self.cs = cs
+            self.dc = dc
+            self.cs.init(self.cs.OUT, value=1)
+            self.dc.init(self.dc.OUT, value=0)
+            self.write_cmd = self.write_cmd_spi
+            self.write_data = self.write_data_spi
+        elif i2c is not None:
+            self.address = address
+            self.i2c = i2c
+            self.write_cmd = self.write_cmd_i2c
+            self.write_data = self.write_data_i2c
+        else:
+            raise RuntimeError('An I2C or SPI interface is required.')
         self.width = width
         self.height = height
         self.pages = self.height // 8
@@ -83,42 +98,39 @@ class Display(object):
         # Frame Buffer
         self.monoFB = FrameBuffer(self.mono_image, width, height, MONO_VLSB)
         self.clear_buffers()
-        # Initialize GPIO pins
-        self.cs.init(self.cs.OUT, value=1)
-        self.dc.init(self.dc.OUT, value=0)
-        self.rst.init(self.rst.OUT, value=1)
-
         self.reset()
         # Send initialization commands
         for cmd in (
-            self.DISPLAY_OFF, 
-            self.DISPLAY_CLOCK_DIV, 0x80,
-            self.MUX_RATIO, self.height - 1,
-            self.DISPLAY_OFFSET, 0x00,
-            self.DISPLAY_START_LINE,
-            self.CHARGE_PUMP, 0x14,
-            self.MEMORY_ADDRESSING_MODE, 0x00, 
-            self.SEGMENT_MAP_FLIPPED,
-            self.COM_OUTPUT_FLIPPED,
-            self.COM_PINS_HW_CFG, 0x02 if (self.height == 32 or self.height == 16) and (self.width != 64)
-            else 0x12,
-            self.CONTRAST_CONTROL, 0xFF,
-            self.PRECHARGE_PERIOD, 0xF1,
-            self. VCOM_DESELECT_LEVEL, 0x40,            
-            self.ENTIRE_DISPLAY_ON, # output follows RAM contents
-            self.INVERSION_OFF, # not inverted
-            self.DISPLAY_ON): # on
-            self.write_cmd(cmd) 
+                    self.DISPLAY_OFF,
+                    self.DISPLAY_CLOCK_DIV, 0x80,
+                    self.MUX_RATIO, self.height - 1,
+                    self.DISPLAY_OFFSET, 0x00,
+                    self.DISPLAY_START_LINE,
+                    self.CHARGE_PUMP, 0x14,
+                    self.MEMORY_ADDRESSING_MODE, 0x00,
+                    self.SEGMENT_MAP_FLIPPED,
+                    self.COM_OUTPUT_FLIPPED,
+                    self.COM_PINS_HW_CFG, 0x02 if (self.height == 32 or
+                                                   self.height == 16) and
+                                                  (self.width != 64)
+                    else 0x12,
+                    self.CONTRAST_CONTROL, 0xFF,
+                    self.PRECHARGE_PERIOD, 0xF1,
+                    self. VCOM_DESELECT_LEVEL, 0x40,
+                    self.ENTIRE_DISPLAY_ON,  # output follows RAM contents
+                    self.INVERSION_OFF,  # not inverted
+                    self.DISPLAY_ON):  # on
+            self.write_cmd(cmd)
 
         self.clear_buffers()
         self.present()
-
 
     def cleanup(self):
         """Clean up resources."""
         self.clear()
         self.sleep()
-        self.spi.deinit()
+        if hasattr(self, 'spi'):
+            self.spi.deinit()
         print('display off')
 
     def clear(self):
@@ -126,7 +138,6 @@ class Display(object):
         """
         self.clear_buffers()
         self.present()
-
 
     def clear_buffers(self):
         """Clear buffer.
@@ -394,7 +405,7 @@ class Display(object):
         if self.is_off_grid(min(x1, x2), min(y1, y2),
                             max(x1, x2), max(y1, y2)):
             return
-        self.monoFB.line(x1, y1, x2, y2, invert  ^ 1)
+        self.monoFB.line(x1, y1, x2, y2, invert ^ 1)
 
     def draw_lines(self, coords, invert=False):
         """Draw multiple lines.
@@ -508,13 +519,15 @@ class Display(object):
             elif rotate == 180:
                 # Fill in spacing
                 if spacing:
-                    self.fill_rectangle(x - w - spacing, y, spacing, h, invert ^ 1)
+                    self.fill_rectangle(x - w - spacing, y, spacing,
+                                        h, invert ^ 1)
                 # Position x for next letter
                 x -= (w + spacing)
             elif rotate == 270:
                 # Fill in spacing
                 if spacing:
-                    self.fill_rectangle(x, y - h - spacing, w, spacing, invert ^ 1)
+                    self.fill_rectangle(x, y - h - spacing, w, spacing,
+                                        invert ^ 1)
                 # Position y for next letter
                 y -= (h + spacing)
             else:
@@ -829,14 +842,14 @@ class Display(object):
         self.write_cmd(self.pages - 1)
         self.write_data(self.mono_image)
 
-
     def reset(self):
         """Perform reset."""
-        self.rst(1)
-        sleep_ms(1)
-        self.rst(0)
-        sleep_ms(10)
-        self.rst(1)
+        if hasattr(self, 'rst'):
+            self.rst(1)
+            sleep_ms(1)
+            self.rst(0)
+            sleep_ms(10)
+            self.rst(1)
 
     def sleep(self):
         """Put display to sleep."""
@@ -846,7 +859,29 @@ class Display(object):
         """Wake display from sleep."""
         self.write_cmd(self.DISPLAY_ON)
 
-    def write_cmd(self, command, *args):
+    def write_cmd_i2c(self, command, *args):
+        """Write command to display using I2C.
+
+        Args:
+            command (byte): Display command code.
+            *args (optional bytes): Data to transmit.
+        """
+        # 0x80 -> Co=1, D/C#=0
+        self.i2c.writeto_mem(self.address, 0x80, bytearray([command]))
+        if args:
+            #  0x40 -> Co=0, D/C#=1
+            self.i2c.writeto_mem(self.address, 0x40, bytearray(args))
+
+    def write_data_i2c(self, data):
+        """Write data to display.
+
+        Args:
+            data (bytes): Data to transmit.
+        """
+        #  0x40 -> Co=0, D/C#=1
+        self.i2c.writeto_mem(self.address, 0x40, data)
+
+    def write_cmd_spi(self, command, *args):
         """Write command to display.
 
         Args:
@@ -861,7 +896,7 @@ class Display(object):
         if len(args) > 0:
             self.write_data(bytearray(args))
 
-    def write_data(self, data):
+    def write_data_spi(self, data):
         """Write data to display.
 
         Args:

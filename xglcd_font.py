@@ -1,6 +1,6 @@
 """XGLCD Font Utility."""
 from math import floor
-from framebuf import FrameBuffer, MONO_VLSB
+from framebuf import FrameBuffer, MONO_VLSB  # type: ignore
 
 
 class XglcdFont(object):
@@ -101,7 +101,7 @@ class XglcdFont(object):
         # Set inversion and re-order bytes if height > 1 byte
         pos = 0
         ba2 = bytearray(array_size)
-        if invert is False:  
+        if invert is False:
             for i in range(0, array_size, byte_height):
                 ba2[pos] = ba[i]
                 if byte_height > 1:
