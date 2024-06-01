@@ -8,3 +8,7 @@ There are sample images in monoHMSB format.  I’ve included a python app in the
 Tutorial on my website [Rototron](https://www.rototron.info/projects/wi-fi-caller-id-blocking/) or click picture below for a YouTube video:
 
 [![SSD1309 Tutorial](https://img.youtube.com/vi/GhXtQNxpKeo/sddefault.jpg)](https://youtu.be/GhXtQNxpKeo)
+
+Here's another [tutorial](https://www.rototron.info/projects/wi-fi-caller-id-blocking/) using this library or click below for YouTube video:
+
+[![SSD1309 Tutorial](https://img.youtube.com/vi/b63ZPafPQVM/sddefault.jpg)](https://youtu.be/b63ZPafPQVM)
