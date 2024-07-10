@@ -1,6 +1,6 @@
 """SSD1309 demo (bouncing sprite)."""
-from machine import Pin, SPI
-from utime import sleep_us, ticks_us, ticks_diff
+from machine import Pin, SPI  # type: ignore
+from utime import sleep_us, ticks_us, ticks_diff  # type: ignore
 from ssd1309 import Display
 
 
@@ -75,13 +75,15 @@ class BouncingSprite(object):
             self.display.fill_rectangle(x + w, prev_y, x_speed, h, invert=True)
         elif prev_x < x:
             # Right
-            self.display.fill_rectangle(x - x_speed, prev_y, x_speed, h, invert=True)
+            self.display.fill_rectangle(x - x_speed, prev_y, x_speed, h,
+                                        invert=True)
         if prev_y > y:
             # Upward
             self.display.fill_rectangle(prev_x, y + h, w, y_speed, invert=True)
         elif prev_y < y:
             # Downward
-            self.display.fill_rectangle(prev_x, y - y_speed, w, y_speed, invert=True)
+            self.display.fill_rectangle(prev_x, y - y_speed, w, y_speed,
+                                        invert=True)
 
         self.display.draw_sprite(self.buf, x, y, w, h)
         self.display.present()
@@ -100,7 +102,7 @@ def test():
 
         # Load sprite
         saucer = BouncingSprite('images/saucer_48x26.mono',
-                              48, 26, 128, 64, 1, display)
+                                48, 26, 128, 64, 1, display)
 
         while True:
             timer = ticks_us()

@@ -43,10 +43,10 @@ class Display(object):
     PSA_IN_PAM = const(0xB0)
     DISPLAY_START_LINE = const(0x40)
     SEGMENT_MAP_REMAP = const(0xA0)
-    SEGMENT_MAP_FLIPPED = const(0xA1)
+    SEGMENT_MAP_FLIP = const(0xA1)
     MUX_RATIO = const(0xA8)
     COM_OUTPUT_NORMAL = const(0xC0)
-    COM_OUTPUT_FLIPPED = const(0xC8)
+    COM_OUTPUT_FLIP = const(0xC8)
     DISPLAY_OFFSET = const(0xD3)
     COM_PINS_HW_CFG = const(0xDA)
     GPIO = const(0xDC)
@@ -57,7 +57,7 @@ class Display(object):
     VCOM_DESELECT_LEVEL = const(0xdb)
 
     def __init__(self, spi=None, cs=None, dc=None, rst=None,
-                 i2c=None, address=0x3C, width=128, height=64):
+                 i2c=None, address=0x3C, width=128, height=64, flip=False):
         """Constructor for Display.
 
         Args:
@@ -69,6 +69,7 @@ class Display(object):
             address (Optional int): I2C address
             width (Optional int): Screen width (default 128)
             height (Optional int): Screen height (default 64)
+            flip (bool):True=Rotate 180 degrees, False=0 degrees (default)
         """
         if rst is not None:
             self.rst = rst
@@ -108,8 +109,8 @@ class Display(object):
                     self.DISPLAY_START_LINE,
                     self.CHARGE_PUMP, 0x14,
                     self.MEMORY_ADDRESSING_MODE, 0x00,
-                    self.SEGMENT_MAP_FLIPPED,
-                    self.COM_OUTPUT_FLIPPED,
+                    self.SEGMENT_MAP_FLIP if flip else self.SEGMENT_MAP_REMAP,
+                    self.COM_OUTPUT_FLIP if flip else self.COM_OUTPUT_NORMAL,
                     self.COM_PINS_HW_CFG, 0x02 if (self.height == 32 or
                                                    self.height == 16) and
                                                   (self.width != 64)
@@ -170,9 +171,7 @@ class Display(object):
                         fb2.pixel(x1, y1, fb.pixel(x1, y1) ^ 0x01)
                 fb = fb2
             elif rotate == 90:  # 90 degrees
-                byte_width = (w - 1) // 8 + 1
-                adj_size = h * byte_width
-                fb2 = FrameBuffer(bytearray(adj_size), h, w, MONO_HMSB)
+                fb2 = FrameBuffer(bytearray(array_size), h, w, MONO_HMSB)
                 for y1 in range(h):
                     for x1 in range(w):
                         if invert is True:
@@ -193,9 +192,7 @@ class Display(object):
                                       fb.pixel((w - 1) - x1, (h - 1) - y1))
                 fb = fb2
             elif rotate == 270:  # 270 degrees
-                byte_width = (w - 1) // 8 + 1
-                adj_size = h * byte_width
-                fb2 = FrameBuffer(bytearray(adj_size), h, w, MONO_HMSB)
+                fb2 = FrameBuffer(bytearray(array_size), h, w, MONO_HMSB)
                 for y1 in range(h):
                     for x1 in range(w):
                         if invert is True:
@@ -736,6 +733,21 @@ class Display(object):
         # Fill polygon
         for y, x in xdict.items():
             self.draw_hline(x[0], y, x[1] - x[0] + 2, invert)
+
+    def flip(self, flip=True):
+        """Set's the display orientation to either 0 or 180 degrees.
+
+        Args:
+            flip(bool): True=180 degrees, False=0 degrees
+        Note:
+            Anything currently displayed won't flip until present is called
+        """
+        if flip:
+            self.write_cmd(self.SEGMENT_MAP_FLIP)  # Set segment remap
+            self.write_cmd(self.COM_OUTPUT_FLIP)  # Set COM output scan dir
+        else:
+            self.write_cmd(self.SEGMENT_MAP_REMAP)  # Set segment remap
+            self.write_cmd(self.COM_OUTPUT_NORMAL)  # Set COM output scan dir
 
     def is_off_grid(self, xmin, ymin, xmax, ymax):
         """Check if coordinates extend past display boundaries.
