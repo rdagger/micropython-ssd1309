@@ -1,7 +1,8 @@
 """XGLCD Font Utility."""
 from math import floor
 from framebuf import FrameBuffer, MONO_VLSB  # type: ignore
-
+from re import match
+from sys import exit
 
 class XglcdFont(object):
     """Font data in X-GLCD format.
@@ -21,7 +22,8 @@ class XglcdFont(object):
         you must use XP compatibility mode or you can just use the clipboard.
     """
 
-    def __init__(self, path, width, height, start_letter=32, letter_count=96):
+    def __init__(self, path, start_letter=32, letter_count=96):
+    
         """Constructor for X-GLCD Font object.
 
         Args:
@@ -31,20 +33,20 @@ class XglcdFont(object):
             start_letter (int): First ACII letter.  Default is 32.
             letter_count (int): Total number of letters.  Default is 96.
         """
-        self.width = width
-        self.height = height
+        self.width, self.height = self.get_font_size(path)
         self.start_letter = start_letter
         self.letter_count = letter_count
         self.bytes_per_letter = (floor(
             (self.height - 1) / 8) + 1) * self.width + 1
         self.__load_xglcd_font(path)
-
+    
     def __load_xglcd_font(self, path):
         """Load X-GLCD font data from text file.
 
         Args:
             path (string): Full path of font file.
         """
+        
         bytes_per_letter = self.bytes_per_letter
         # Buffer to hold letter byte values
         self.letters = bytearray(bytes_per_letter * self.letter_count)
@@ -129,7 +131,6 @@ class XglcdFont(object):
                 if byte_height > 5:
                     ba2[pos + width * 5] = ba[i + 5] ^ 0xFF
                 pos += 1
-
         fb = FrameBuffer(ba2, width, height, MONO_VLSB)
 
         if rotate == 0:  # 0 degrees
@@ -175,3 +176,27 @@ class XglcdFont(object):
             # Add length of letter and spacing
             length += self.letters[offset] + spacing
         return length
+    
+    def get_font_size(self, filename):
+        """Get size of font from filename.
+
+        Args:
+            f (string): Name of font file
+        Returns:
+            (int, int): width, height
+        """
+        fontsize = ""
+        filename = filename[filename.rfind(".") - 6:filename.rfind(".")]    # Strip off extension from filename
+        while True:
+            filename, lastChar = filename[:-1], filename[-1]   # Pop last character from filename, store in r
+            if lastChar.isdigit() or lastChar == "x":
+                fontsize = lastChar + fontsize
+            else:   # Not digit or "x" - we're done
+                while match("^x", fontsize): # Clean up any x's that may have slipped in from the filename
+                    fontsize = fontsize[1:]
+                if len(fontsize) <= 5 and match("^\d+x\d+$", fontsize): # Sanity check. Micropython does not support regex repititions "{1,2}" so were stuck using a "+"
+                    width, height = fontsize.split("x")
+                    return (int(width), int(height))
+                else:
+                    print("Error getting font", fontsize)
+                    exit()
