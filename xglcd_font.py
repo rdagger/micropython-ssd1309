@@ -22,8 +22,8 @@ class XglcdFont(object):
         you must use XP compatibility mode or you can just use the clipboard.
     """
 
-    def __init__(self, path, start_letter=32, letter_count=96):
-    
+    def __init__(self, path, width=0, height=0, start_letter=32, letter_count=96):
+            
         """Constructor for X-GLCD Font object.
 
         Args:
@@ -33,13 +33,18 @@ class XglcdFont(object):
             start_letter (int): First ACII letter.  Default is 32.
             letter_count (int): Total number of letters.  Default is 96.
         """
-        self.width, self.height = self.get_font_size(path)
+        if width == 0 or height == 0:
+            self.width, self.height = self.get_font_size(path)
+        else:
+            self.width = width
+            self.height = height
         self.start_letter = start_letter
         self.letter_count = letter_count
         self.bytes_per_letter = (floor(
             (self.height - 1) / 8) + 1) * self.width + 1
         self.__load_xglcd_font(path)
     
+   
     def __load_xglcd_font(self, path):
         """Load X-GLCD font data from text file.
 
