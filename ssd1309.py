@@ -887,8 +887,8 @@ class Display(object):
             end_column (int): last column (default: 127)
         Note:
             A time delay of 2/Frame Frequency required for consecutive calls.
+            Any existing scrolling should be stopped before first call.
         """
-        self.scroll_stop()  # Any scrolling should be stopped
         if direction == "right":
             cmd = self.SCROLL_BY_ONE_RIGHT
         else:

@@ -26,7 +26,7 @@ def test():
         for _ in range(80):
             display.scroll_horizontal_manual(direction='left')
             sleep(.03)  # Minimum time delay is 2/Frame Frequency
-
+    display.scroll_stop()
     display.clear()
     display.draw_bitmap("images/saucer_48x26.mono", 14, 0, 48, 26, invert=True)
     y = 16  # Starting terrain height
@@ -36,7 +36,7 @@ def test():
         display.draw_pixel(x, y+32)  # Draw current terrain pixel
     display.present()
 
-    for _ in range(768):
+    for _ in range(1024):
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
         display.write_cmd(0)  # Minimum column
         display.write_cmd(0)  # Maximum column
@@ -58,10 +58,8 @@ def test():
         data = bytearray(4)  # Initialize array of 8 bytes
         data[page] = 1 << bit_index  # Set the pixel to display
         display.write_data(data)  # Write pixel
-        sleep(.03)  # Minimum time delay is 2/Frame Frequency
-
-    sleep(1)
-
+        sleep(.02)  # Minimum time delay is 2/Frame Frequency
+    display.scroll_stop()
     display.cleanup()
     print('Done.')
 
