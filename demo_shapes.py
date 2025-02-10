@@ -6,7 +6,7 @@ from ssd1309 import Display
 
 def test():
     """Test code."""
-    spi = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))
+    spi = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))  # ESP32 SPI 1
     display = Display(spi, dc=Pin(4), cs=Pin(5), rst=Pin(2))
     # i2c = I2C(0, freq=400000, scl=Pin(5), sda=Pin(4))  # Pico I2C bus 1
     # display = Display(i2c=i2c, rst=Pin(2))

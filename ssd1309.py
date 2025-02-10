@@ -24,15 +24,15 @@ class Display(object):
     CHARGE_PUMP = const(0x8D)
 
     # Scrolling commands
-    CH_SCROLL_SETUP_RIGHT = const(0x26)
-    CH_SCROLL_SETUP_LEFT = const(0x27)
-    CV_SCROLL_SETUP_RIGHT = const(0x29)
-    CV_SCROLL_SETUP_LEFT = const(0x2A)
-    DEACTIVATE_SCROLL = const(0x2E)
-    ACTIVATE_SCROLL = const(0x2F)
-    VSCROLL_AREA = const(0xA3)
+    SCROLL_HORIZONTAL_RIGHT = const(0x26)
+    SCROLL_HORIZONTAL_LEFT = const(0x27)
+    SCROLL_VERTICAL_RIGHT = const(0x29)
+    SCROLL_VERTICAL_LEFT = const(0x2A)
     SCROLL_SETUP_LEFT = const(0x2C)
     SCROLL_SETUP_RIGHT = const(0x2D)
+    SCROLL_SETUP_VERTICAL_AREA = const(0xA3)
+    SCROLL_DEACTIVATE = const(0x2E)
+    SCROLL_ACTIVATE = const(0x2F)
 
     # Addressing commands
     LOW_CSA_IN_PAM = const(0x00)
@@ -866,6 +866,91 @@ class Display(object):
     def sleep(self):
         """Put display to sleep."""
         self.write_cmd(self.DISPLAY_OFF)
+
+    def scroll_start(self):
+        """Activates scrolling after setup."""
+        self.write_cmd(self.SCROLL_ACTIVATE)
+
+    def scroll_stop(self):
+        """Stops any scrolling effect."""
+        self.write_cmd(self.SCROLL_DEACTIVATE)
+
+    def scroll_horizontal_setup(self, direction="right", start_page=0,
+                                end_page=7, interval=0, start_column=0,
+                                end_column=127):
+        """Configures horizontal only scrolling.
+
+        Args:
+            direction (string): scroll 'left' or 'right' (default: 'right')
+            start_page (int): first horizontal band to scroll 0-7 (default: 0)
+            end_page (int): last horizontal band to scroll 0-7 (default: 7)
+            interval (int): time interval between each scroll step (default: 0)
+                (0=5 frames, 1=64 frames, 2=128 frames, 3=256 frames, 4=2
+                 frames, 5=3 frames, 6=4 frames, 7=1 frame)
+            start_column (int): first column (default: 0)
+            end_column (int): last column (default: 127)
+        """
+        self.scroll_stop()  # Any scrolling should be stopped
+        if direction == "right":
+            cmd = self.SCROLL_HORIZONTAL_RIGHT
+        else:
+            cmd = self.SCROLL_HORIZONTAL_LEFT
+        self.write_cmd(cmd)  # Left or right command
+        self.write_cmd(0x00)  # Dummy byte - column scroll offset (no effect)
+        self.write_cmd(start_page)  # Start page address
+        self.write_cmd(interval)  # Time interval between each scroll steps
+        self.write_cmd(end_page)  # End page address
+        self.write_cmd(0x00)  # Dummy byte - vertical scroll offset (no effect)
+        self.write_cmd(start_column)  # Start column
+        self.write_cmd(end_column)  # End column
+
+    def scroll_setup(self, direction=["up"], start_page=0,
+                     end_page=7, first_row=0, total_rows=64,
+                     interval=0, start_column=0, end_column=127,
+                     vertical_speed=1):
+        """Configures advanced scrolling setup.
+
+        Args:
+            direction ([string]): 'up', 'down', 'left', 'right' (default: 'up')
+            start_page (int): first horizontal band to scroll 0-7 (default: 0)
+            end_page (int): last horizontal band to scroll 0-7 (default: 7)
+            first_row (int): first horizontal row to scroll (default: 0)
+            total_rows (int): number of rows to scroll (default: 64)
+            interval (int): time interval between each scroll step (default: 0)
+                (0=5 frames, 1=64 frames, 2=128 frames, 3=256 frames, 4=2
+                 frames, 5=3 frames, 6=4 frames, 7=1 frame)
+            start_column (int): first column (default: 0)
+            end_column (int): last column (default: 127)
+            vertical_speed (int): amount of scroll 1-32 (default: 1)
+        """
+        assert 0 <= vertical_speed <= 31, "Vertical speed must be 0 - 31."
+        assert not ({"up", "down"} <= set(direction)
+                    ), '"up" & "down" cannot both be in the direction list.'
+        assert not ({"left", "right"} <= set(direction)
+                    ), '"left" & "right" cannot both be in the direction list.'
+        self.scroll_stop()  # Any scrolling should be stopped
+        self.write_cmd(self.SCROLL_SETUP_VERTICAL_AREA)  # Vertical scroll area
+        self.write_cmd(first_row)  # First row of scroll region
+        self.write_cmd(total_rows)  # Number of  rows to scroll
+        horizontal = 0  # No horizontal movement
+        cmd = self.SCROLL_VERTICAL_LEFT  # Left or no horizontal
+        if "right" in direction:
+            cmd = self.SCROLL_VERTICAL_RIGHT  # Right horizontal scroll
+            horizontal = 1  # Horizontal movement
+        elif "left" in direction:
+            horizontal = 1  # Horizontal movement
+        self.write_cmd(cmd)  # Vertical scroll left or right
+        self.write_cmd(horizontal)  # Horizontal scroll
+        self.write_cmd(start_page)  # Start page address
+        self.write_cmd(interval)  # Time interval between each scroll steps
+        self.write_cmd(end_page)  # End page address
+        if "down" in direction:
+            vertical_speed = 64 - vertical_speed  # Invert for down
+        elif "up" not in direction:
+            vertical_speed = 0  # Disable vertical if not up or down
+        self.write_cmd(vertical_speed)  # 0 to 31 up / 63 to 32 down
+        self.write_cmd(start_column)  # Start column
+        self.write_cmd(end_column)  # End column
 
     def wake(self):
         """Wake display from sleep."""
