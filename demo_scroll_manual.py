@@ -14,8 +14,8 @@ def test():
     # i2c = I2C(0, freq=400000, scl=Pin(5), sda=Pin(4))  # Pico I2C bus1
     # display = Display(i2c=i2c, rst=Pin(2))
 
+    # Invader demo
     display.clear()
-
     display.draw_bitmap("images/invaders_48x36.mono", 0, 14, 48, 36)
     display.present()
 
@@ -27,6 +27,8 @@ def test():
             display.scroll_horizontal_manual(direction='left')
             sleep(.03)  # Minimum time delay is 2/Frame Frequency
     display.scroll_stop()
+
+    # Saucer demo
     display.clear()
     display.draw_bitmap("images/saucer_48x26.mono", 14, 0, 48, 26, invert=True)
     y = 16  # Starting terrain height
@@ -36,15 +38,20 @@ def test():
         display.draw_pixel(x, y+32)  # Draw current terrain pixel
     display.present()
 
-    for _ in range(1024):
+    for _ in range(512):
+        # Clear left most column
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
         display.write_cmd(0)  # Minimum column
         display.write_cmd(0)  # Maximum column
         display.write_cmd(display.PAGE_ADDRESS)  # Set pages to write
         display.write_cmd(0)  # Minimum page
         display.write_cmd(7)  # Maximum page
-        display.write_data(bytearray(8))  # Clear left most column
+        display.write_data(bytearray(8))
+
+        # Scroll lower 4 pages of screen horizontally left 1 column
         display.scroll_horizontal_manual(direction="left", start_page=4)
+
+        # Draw next terrain pixel
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
         display.write_cmd(127)  # Minimum column
         display.write_cmd(127)  # Maximum column
@@ -58,8 +65,7 @@ def test():
         data = bytearray(4)  # Initialize array of 8 bytes
         data[page] = 1 << bit_index  # Set the pixel to display
         display.write_data(data)  # Write pixel
-        sleep(.02)  # Minimum time delay is 2/Frame Frequency
-    display.scroll_stop()
+        sleep(.04)  # Minimum time delay is 2/Frame Frequency
     display.cleanup()
     print('Done.')
 
