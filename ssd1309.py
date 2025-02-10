@@ -28,8 +28,8 @@ class Display(object):
     SCROLL_HORIZONTAL_LEFT = const(0x27)
     SCROLL_VERTICAL_RIGHT = const(0x29)
     SCROLL_VERTICAL_LEFT = const(0x2A)
-    SCROLL_SETUP_LEFT = const(0x2C)
-    SCROLL_SETUP_RIGHT = const(0x2D)
+    SCROLL_BY_ONE_RIGHT = const(0x2C)
+    SCROLL_BY_ONE_LEFT = const(0x2D)
     SCROLL_SETUP_VERTICAL_AREA = const(0xA3)
     SCROLL_DEACTIVATE = const(0x2E)
     SCROLL_ACTIVATE = const(0x2F)
@@ -874,6 +874,33 @@ class Display(object):
     def scroll_stop(self):
         """Stops any scrolling effect."""
         self.write_cmd(self.SCROLL_DEACTIVATE)
+
+    def scroll_horizontal_manual(self, direction="right", start_page=0,
+                                 end_page=7, start_column=0, end_column=127):
+        """Manual horizontal scrolling.
+
+        Args:
+            direction (string): scroll 'left' or 'right' (default: 'right')
+            start_page (int): first horizontal band to scroll 0-7 (default: 0)
+            end_page (int): last horizontal band to scroll 0-7 (default: 7)
+            start_column (int): first column (default: 0)
+            end_column (int): last column (default: 127)
+        Note:
+            A time delay of 2/Frame Frequency required for consecutive calls.
+        """
+        self.scroll_stop()  # Any scrolling should be stopped
+        if direction == "right":
+            cmd = self.SCROLL_BY_ONE_RIGHT
+        else:
+            cmd = self.SCROLL_BY_ONE_LEFT
+        self.write_cmd(cmd)  # Left or right command
+        self.write_cmd(0x00)  # Dummy byte - column scroll offset (no effect)
+        self.write_cmd(start_page)  # Start page address
+        self.write_cmd(0x00)  # Dummy byte - interval set by user (no effect)
+        self.write_cmd(end_page)  # End page address
+        self.write_cmd(0x00)  # Dummy byte - vertical scroll offset (no effect)
+        self.write_cmd(start_column)  # Start column
+        self.write_cmd(end_column)  # End column
 
     def scroll_horizontal_setup(self, direction="right", start_page=0,
                                 end_page=7, interval=0, start_column=0,
