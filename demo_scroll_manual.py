@@ -38,7 +38,7 @@ def test():
         display.draw_pixel(x, y+32)  # Draw current terrain pixel
     display.present()
 
-    for _ in range(10240):
+    for _ in range(1024):
         # Clear left most column
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
         display.write_cmd(0)  # Minimum column
@@ -66,7 +66,7 @@ def test():
         data = bytearray(4)  # Initialize array of 8 bytes
         data[page] = 1 << bit_index  # Set the pixel to display
         display.write_data(data)  # Write pixel
-        
+
     display.cleanup()
     print('Done.')
 
