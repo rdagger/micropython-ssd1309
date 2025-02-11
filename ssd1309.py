@@ -887,6 +887,7 @@ class Display(object):
             end_column (int): last column (default: 127)
         Note:
             A time delay of 2/Frame Frequency required for consecutive calls.
+            The time delay should be placed immediately after the scroll.
             Any existing scrolling should be stopped before first call.
         """
         if direction == "right":

@@ -22,10 +22,10 @@ def test():
     for _ in range(2):
         for _ in range(80):
             display.scroll_horizontal_manual()
-            sleep(.03)  # Minimum time delay is 2/Frame Frequency
+            sleep(.02)  # Minimum time delay is 2/Frame Frequency
         for _ in range(80):
             display.scroll_horizontal_manual(direction='left')
-            sleep(.03)  # Minimum time delay is 2/Frame Frequency
+            sleep(.02)  # Minimum time delay is 2/Frame Frequency
     display.scroll_stop()
 
     # Saucer demo
@@ -38,7 +38,7 @@ def test():
         display.draw_pixel(x, y+32)  # Draw current terrain pixel
     display.present()
 
-    for _ in range(512):
+    for _ in range(10240):
         # Clear left most column
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
         display.write_cmd(0)  # Minimum column
@@ -50,6 +50,7 @@ def test():
 
         # Scroll lower 4 pages of screen horizontally left 1 column
         display.scroll_horizontal_manual(direction="left", start_page=4)
+        sleep(.02)  # Minimum time delay is 2/Frame Frequency
 
         # Draw next terrain pixel
         display.write_cmd(display.COLUMN_ADDRESS)  # Set columns to write
@@ -65,7 +66,7 @@ def test():
         data = bytearray(4)  # Initialize array of 8 bytes
         data[page] = 1 << bit_index  # Set the pixel to display
         display.write_data(data)  # Write pixel
-        sleep(.04)  # Minimum time delay is 2/Frame Frequency
+        
     display.cleanup()
     print('Done.')
 
