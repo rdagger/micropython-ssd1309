@@ -12,3 +12,7 @@ Tutorial on my website [Rototron](https://www.rototron.info/projects/wi-fi-calle
 Here's another [tutorial](https://www.rototron.info/projects/wi-fi-caller-id-blocking/) using this library or click below for YouTube video:
 
 [![SSD1309 Tutorial](https://img.youtube.com/vi/b63ZPafPQVM/sddefault.jpg)](https://youtu.be/b63ZPafPQVM)
+
+Hardware scrolling is now supported. This update enables smooth, efficient scrolling with minimal processor usage—here's a short video from the demo.
+
+https://github.com/user-attachments/assets/14209ff1-a0f7-4997-b1d5-76dab3f15c07
