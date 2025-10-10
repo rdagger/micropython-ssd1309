@@ -540,7 +540,7 @@ class Display(object):
             text (string): Text to draw.
         """
         # Confirm coordinates in boundary
-        if self.is_off_grid(x, y, x + 8, y + 8):
+        if self.is_off_grid(x, y, x + 7, y + 7):
             return
         self.monoFB.text(text, x, y)
 
