@@ -554,7 +554,7 @@ class Display(object):
             invert (bool): True = clear line, False (Default) = draw line.
         """
         # Confirm coordinates in boundary
-        if self.is_off_grid(x, y, x, y + h):
+        if self.is_off_grid(x, y, x, y + h - 1):
             return
         self.monoFB.vline(x, y, h, int(invert ^ 1))
 
