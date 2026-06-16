@@ -13,6 +13,6 @@ Here's another [tutorial](https://www.rototron.info/projects/wi-fi-caller-id-blo
 
 [![SSD1309 Tutorial](https://img.youtube.com/vi/b63ZPafPQVM/sddefault.jpg)](https://youtu.be/b63ZPafPQVM)
 
-Hardware scrolling is now supported. This update enables smooth, efficient scrolling with minimal processor usage—here's a short video from the demo.
+Hardware scrolling is now supported. This update enables smooth, efficient scrolling with minimal processor usage. Here's a short video from the demo.
 
 https://github.com/user-attachments/assets/14209ff1-a0f7-4997-b1d5-76dab3f15c07
